@@ -27,7 +27,7 @@
 		<link>
 			<name>RISC-M_Emulator</name>
 			<type>2</type>
-			<location>D:/meine_Software/eclipse_C_workspace/RISC-M_Emu/RISC-M_Emulator</location>
+			<locationURI>WORKSPACE_LOC/RISC-M_Emu/RISC-M_Emulator</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

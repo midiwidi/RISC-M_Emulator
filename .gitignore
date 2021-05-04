@@ -1,5 +1,6 @@
 .metadata
 .settings
+RemoteSystemsTempFiles/
 bin/
 Debug/
 Release/
