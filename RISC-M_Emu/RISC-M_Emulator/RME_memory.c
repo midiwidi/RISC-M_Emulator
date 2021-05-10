@@ -166,12 +166,14 @@ EMU_ERR load_memory(RISC_memory* mem, int idx, const char* memfile, bool memfile
 	uint32_t addr;
 	uint32_t ui32_tmp;
 	uint8_t* p_ui8_tmp;
+	int err = ERR_NONE;
 
 	// Open the file
 	if (!(fid = fopen(memfile, "r")))
 	{
 		RME_fprintf(stderr, "Error: file %s open failed\n", memfile);
-		return ERR_FILE_OPEN;
+		err = ERR_FILE_OPEN;
+		goto quit;
 	}
 
 	// Determine the file size
@@ -183,7 +185,8 @@ EMU_ERR load_memory(RISC_memory* mem, int idx, const char* memfile, bool memfile
 	if (filesize > (mem->end_addr[idx] - mem->start_addr[idx] + 1) * mem->data_bytes_per_word[idx])
 	{
 		RME_fprintf(stderr, "Error: size (%ld) of the memory file %s is bigger than the memory it is loaded into (%ld)\n", filesize, memfile, (long)(mem->end_addr - mem->start_addr + 1) * mem->data_bytes_per_word[idx]);
-		return ERR_FILE_SIZE;
+		err = ERR_FILE_SIZE;
+		goto quit;
 	}
 
 	// Warn if file size is not a multiple of the memory word size
@@ -197,7 +200,8 @@ EMU_ERR load_memory(RISC_memory* mem, int idx, const char* memfile, bool memfile
 	if (fread(mem->data[idx], 1, filesize, fid) != filesize)
 	{
 		RME_fprintf(stderr, "Error: file %s read failed\n", memfile);
-		return ERR_FILE_READ;
+		err = ERR_FILE_READ;
+		goto quit;
 	}
 
 	// Swap bytes if endianness of file doesn't match machine endianness
@@ -236,7 +240,12 @@ EMU_ERR load_memory(RISC_memory* mem, int idx, const char* memfile, bool memfile
 			}
 		}
 	}
-	return ERR_NONE;
+
+quit:
+	if (fid)
+		fclose(fid);
+
+	return err;
 }
 
 void select_memory_slot(RISC_obj* RISC, uint8_t boot_operation)

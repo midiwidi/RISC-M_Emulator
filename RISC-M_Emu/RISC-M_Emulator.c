@@ -14,13 +14,14 @@ int main(int argc, char *argv[])
 {
 	EMU_ERR err = ERR_NONE;
 	RISC_obj* RISC;
+	int i, R;
 
 	if ((err = Emu_Init(&RISC)))
 		goto Cleanup;
 
 	// Create code memories for bootloader and main program (main consists of 2 memories PROM and PRAM)
 	// BootROM (MemSlot 0)
-	if ((err = create_memory(&RISC->code_memory, 0x0000000, MAIN_SW_START_ADDR-1, 2, 0, RO, "d:\\meine_Software\\RISC-M\\MagRISC_test\\MagRISC_test_bootloader.bin", BIG_ENDIAN)))
+	if ((err = create_memory(&RISC->code_memory, 0x0000000, MAIN_SW_START_ADDR-1, 2, 0, RO, "d:\\meine_Software\\RISC-M\\MagRISC_test\\RISC-M_EMU_Test.bin", BIG_ENDIAN)))
 		goto Cleanup;
 	// PROM (MemSlot 0)
 	if ((err = create_memory(&RISC->code_memory, MAIN_SW_START_ADDR, MAIN_SW_START_ADDR+MAIN_SW_MEM_SIZE-1, 2, 0, RO, "d:\\meine_Software\\RISC-M\\MagRISC_test\\MagRISC_test_PROM.bin", BIG_ENDIAN)))
@@ -54,6 +55,8 @@ int main(int argc, char *argv[])
 	{
 		select_memory_slot(RISC, 0);
 		err = RISC_Execute(RISC);
+		for (i=0; i<8; i++)
+			R = read_reg(RISC, i);
 	}
 	while(!err);
 

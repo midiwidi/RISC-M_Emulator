@@ -2,6 +2,7 @@
 #include <string.h>
 #include <RME_CPU.h>
 #include <RME_helper.h>
+#include <RME_tools.h>
 
 EMU_ERR RISC_Reset(RISC_obj* RISC)
 {
@@ -72,7 +73,7 @@ EMU_ERR RISC_Execute(RISC_obj* RISC)
 			if ((err = RISC->read_code_memory(RISC->code_memory_obj_container, RISC->core.PC, &ui32_tmp)))
 				goto Error;
 			RISC->core.PC++;
-			write_reg(RISC, (src << INST_WIDTH) | (ui32_tmp & INST_MASK), dst);
+			write_reg(RISC, extend_sign((src << INST_WIDTH) | (ui32_tmp & INST_MASK), INST_WIDTH + SRC_WIDTH), dst);
 			break;
 		case JNEZ:
 			if (RISC->core.R[0] != 0)

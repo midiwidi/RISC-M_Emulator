@@ -5,7 +5,7 @@
 __declspec (dllexport) int __stdcall emu_create(void);
 __declspec (dllexport) void __stdcall emu_destroy(void);
 
-__declspec (dllexport) int __stdcall emu_load_memory(uint8_t code_or_data, uint8_t memory_idx, uint8_t* filename, int endianness);
+__declspec (dllexport) int __stdcall emu_load_memory(uint8_t code_or_data, uint8_t memory_idx, char* filename, int endianness);
 
 __declspec (dllexport) int __stdcall emu_step(void);
 __declspec (dllexport) int __stdcall emu_run(void);

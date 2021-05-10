@@ -79,11 +79,15 @@ __declspec (dllexport) void __stdcall emu_destroy(void)
 	}
 }
 
-__declspec (dllexport) int __stdcall emu_load_memory(uint8_t code_or_data, uint8_t memory_idx, uint8_t* filename, int endianness)
+__declspec (dllexport) int __stdcall emu_load_memory(uint8_t code_or_data, uint8_t memory_idx, char* filename, int endianness)
 {
 	EMU_ERR err = ERR_NONE;
 
-	//err = load_memory(mem, idx, memfile, memfile_is_bigendian);
+	if (code_or_data)
+		err = load_memory(&RISC->data_memory, memory_idx, filename, endianness);
+	else
+		err = load_memory(&RISC->code_memory, memory_idx, filename, endianness);
+
 	return err;
 }
 

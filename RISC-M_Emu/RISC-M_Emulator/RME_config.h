@@ -6,12 +6,16 @@
 
 #define OPCODE_MASK			0b11111
 #define OPCODE_LSB			11
+#define OPCODE_WIDTH		5
 #define SRC_MASK			0b11111
 #define SRC_LSB				6
+#define SRC_WIDTH			5
 #define DST_MASK			0b111111
 #define DST_LSB				0
+#define DST_WIDTH			6
 #define SRCDST_MASK			0b11111111111
 #define SRCDST_LSB			0
+#define SRCDST_WIDTH		11
 #define INST_MASK			0xFFFF
 #define INST_WIDTH			16
 
