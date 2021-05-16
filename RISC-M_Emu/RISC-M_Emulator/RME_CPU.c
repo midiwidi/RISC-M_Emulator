@@ -26,6 +26,7 @@ EMU_ERR RISC_Execute(RISC_obj* RISC)
 	opcodes opcode;
 	uint32_t src, dst, srcdst;
 	EMU_ERR err;
+	uint8_t clk_cycles_increment = 2; //TODO: Check if the newest processor core implements wait cycles and which impact they have for the clk_cycles
 
 	uint32_t ui32_tmp;
 
@@ -66,14 +67,17 @@ EMU_ERR RISC_Execute(RISC_obj* RISC)
 			write_reg(RISC, ui32_tmp, dst);
 			break;
 		case MOVTIO:
+			// TODO: implement MOVTIO instruction
 			break;
 		case MOVFIO:
+			// TODO: implement MOVFIO instruction
 			break;
 		case MOVC:
 			if ((err = RISC->read_code_memory(RISC->code_memory_obj_container, RISC->core.PC, &ui32_tmp)))
 				goto Error;
 			RISC->core.PC++;
 			write_reg(RISC, extend_sign((src << INST_WIDTH) | (ui32_tmp & INST_MASK), INST_WIDTH + SRC_WIDTH), dst);
+			clk_cycles_increment = 3;
 			break;
 		case JNEZ:
 			if (RISC->core.R[0] != 0)
@@ -101,6 +105,8 @@ EMU_ERR RISC_Execute(RISC_obj* RISC)
 			RISC->core.R[0] <<= 1;
 			break;
 		case MULT:
+			// TODO: implement MULT instruction
+			clk_cycles_increment = 64;
 			break;
 		case HOLD:
 			RISC->core.hold = true;
@@ -124,6 +130,7 @@ EMU_ERR RISC_Execute(RISC_obj* RISC)
 			if ((err = RISC->read_code_memory(RISC->code_memory_obj_container, RISC->core.PC, &ui32_tmp)))
 				goto Error;
 			RISC->core.PC = (srcdst << INST_WIDTH) | (ui32_tmp & INST_MASK);
+			clk_cycles_increment = 3;
 			break;
 		case LJNEZ:
 			if (RISC->core.R[0] != 0)
@@ -134,6 +141,7 @@ EMU_ERR RISC_Execute(RISC_obj* RISC)
 			}
 			else
 				RISC->core.PC++;
+			clk_cycles_increment = 3;
 			break;
 		case LJGEZ:
 			if ((int32_t)RISC->core.R[0] >= 0)
@@ -144,6 +152,7 @@ EMU_ERR RISC_Execute(RISC_obj* RISC)
 			}
 			else
 				RISC->core.PC++;
+			clk_cycles_increment = 3;
 			break;
 		case LCALL:
 			if ((err = RISC->read_code_memory(RISC->code_memory_obj_container, RISC->core.PC, &ui32_tmp)))
@@ -152,10 +161,13 @@ EMU_ERR RISC_Execute(RISC_obj* RISC)
 			if ((err = stack_push(RISC)))
 				goto Error;
 			RISC->core.PC = (srcdst << INST_WIDTH) | (ui32_tmp & INST_MASK);
+			clk_cycles_increment = 3;
 			break;
 		default:
 			break;
 	}
+
+	RISC->core.clk_cycles += clk_cycles_increment;
 
 Error:
 	return err;

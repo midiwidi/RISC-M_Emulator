@@ -19,7 +19,8 @@ typedef enum
 	ERR_FILE_READ,			/* Reading file reported different numbers of bytes read than requested */
 	ERR_CREATE_THREAD,		/* Thread creation failed */
 	ERR_STACK_OVF,			/* Stack overflow */
-	ERR_STACK_UDF			/* Stack underflow */
+	ERR_STACK_UDF,			/* Stack underflow */
+	ERR_ADDR_NOMEM,			/* No memory found which contains this address */
 } EMU_ERR;
 
 typedef enum
@@ -74,7 +75,7 @@ typedef struct
 	bool			debug;
 	bool			programming;
 	bool			hold;
-	struct timeval	exec_end_time;
+	uint64_t		clk_cycles;
 } RISC_core;
 
 typedef struct

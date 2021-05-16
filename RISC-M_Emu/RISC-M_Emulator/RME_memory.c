@@ -5,7 +5,7 @@
 
 EMU_ERR create_memory(	RISC_memory* mem, uint32_t start_addr, uint32_t end_addr,
 							uint8_t data_bytes_per_word, uint8_t slot, MEM_ACCESS access,
-							const char* memfile, bool memfile_is_bigendian)
+							const char* memfile, uint32_t memfile_start_addr, bool memfile_is_bigendian)
 {
 	EMU_ERR err;
 	uint32_t idx = 0;
@@ -42,7 +42,7 @@ EMU_ERR create_memory(	RISC_memory* mem, uint32_t start_addr, uint32_t end_addr,
 	// If memfile was specified, load it
 	if (memfile != NULL)
 	{
-		if((err = load_memory(mem, idx, memfile, memfile_is_bigendian)))
+		if((err = load_memory(mem, idx, memfile, memfile_start_addr, memfile_is_bigendian)))
 			return err;
 	}
 
@@ -68,7 +68,7 @@ EMU_ERR destroy_memory(RISC_memory* mem)
 
 EMU_ERR read_memory(RISC_memory* mem, uint32_t addr, uint32_t* data)
 {
-	// TODO: memory-mapped I/O
+	// TODO: implement reading from memory-mapped I/O
 
 	uint8_t idx;
 	bool found = false;
@@ -112,7 +112,7 @@ EMU_ERR read_memory(RISC_memory* mem, uint32_t addr, uint32_t* data)
 
 EMU_ERR write_memory(RISC_memory* mem, uint32_t addr, uint32_t data)
 {
-	// TODO: memory-mapped I/O
+	// TODO: implement writing to memory-mapped I/O
 
 	uint8_t idx;
 	bool found = false;
@@ -158,7 +158,7 @@ EMU_ERR write_memory(RISC_memory* mem, uint32_t addr, uint32_t data)
 	return ERR_NONE;
 }
 
-EMU_ERR load_memory(RISC_memory* mem, int idx, const char* memfile, bool memfile_is_bigendian)
+EMU_ERR load_memory(RISC_memory* mem, int idx, const char* memfile, uint32_t memfile_start_addr, bool memfile_is_bigendian)
 {
 	FILE* fid;
 	long int filesize;
@@ -167,6 +167,13 @@ EMU_ERR load_memory(RISC_memory* mem, int idx, const char* memfile, bool memfile
 	uint32_t ui32_tmp;
 	uint8_t* p_ui8_tmp;
 	int err = ERR_NONE;
+
+	if ( ! (memfile_start_addr >= mem->start_addr[idx] && memfile_start_addr <= mem->end_addr[idx]) )
+	{
+		RME_fprintf(stderr, "Error: memory file start address 0x%08x is not in the memory address space (0x%08x - 0x%08x)\n", memfile_start_addr, mem->start_addr[idx], mem->end_addr[idx]);
+		err = ERR_ADDR_NOMEM;
+		goto quit;
+	}
 
 	// Open the file
 	if (!(fid = fopen(memfile, "r")))
@@ -182,7 +189,7 @@ EMU_ERR load_memory(RISC_memory* mem, int idx, const char* memfile, bool memfile
 	fseek(fid, 0, SEEK_SET);
 
 	// Error if file is bigger than selected memory
-	if (filesize > (mem->end_addr[idx] - mem->start_addr[idx] + 1) * mem->data_bytes_per_word[idx])
+	if (filesize > (mem->end_addr[idx] - memfile_start_addr + 1) * mem->data_bytes_per_word[idx])
 	{
 		RME_fprintf(stderr, "Error: size (%ld) of the memory file %s is bigger than the memory it is loaded into (%ld)\n", filesize, memfile, (long)(mem->end_addr - mem->start_addr + 1) * mem->data_bytes_per_word[idx]);
 		err = ERR_FILE_SIZE;
@@ -197,7 +204,8 @@ EMU_ERR load_memory(RISC_memory* mem, int idx, const char* memfile, bool memfile
 	}
 
 	// Read file into selected memory
-	if (fread(mem->data[idx], 1, filesize, fid) != filesize)
+	p_ui8_tmp = (uint8_t*)mem->data[idx] + ((memfile_start_addr - mem->start_addr[idx]) * mem->data_bytes_per_word[idx]);
+	if (fread(p_ui8_tmp, 1, filesize, fid) != filesize)
 	{
 		RME_fprintf(stderr, "Error: file %s read failed\n", memfile);
 		err = ERR_FILE_READ;
@@ -210,7 +218,7 @@ EMU_ERR load_memory(RISC_memory* mem, int idx, const char* memfile, bool memfile
 		ui32_tmp = 1;
 		if (memfile_is_bigendian == *(uint8_t*)&ui32_tmp) // *(uint8_t*)&ui32_tmp is equal to 1 if we are on a little endian machine
 		{
-			p_ui8_tmp = (uint8_t*)mem->data[idx];
+			p_ui8_tmp = (uint8_t*)mem->data[idx] + ((memfile_start_addr - mem->start_addr[idx]) * mem->data_bytes_per_word[idx]);
 			for (addr = 0; addr < size_in_mem; addr++)
 			{
 				switch(mem->data_bytes_per_word[idx])
